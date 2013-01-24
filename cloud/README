@@ -1,5 +1,4 @@
 Directory for all code located on the cloud server
-
 Cloud server used solely for forwarding files from the cameras and
 stations to the main server. Cloud server also does some image
 processing to reduce bandwidth.
