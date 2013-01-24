@@ -1,0 +1,65 @@
+BRP Weather Project
+
+Dr. Ray Russell
+Tyler Davis
+
+== Basics ==
+
+to start watching all the directories specified in the station database table use
+
+./startWxDaemon.sh
+
+to stop use:
+
+./stopWxDaemon.sh
+
+
+
+== Contents ==
+
+- data/
+
+    - brdata.txt
+        last retrieved data file from blowing rock
+
+    - rgdata.txt
+        last retrieved data file from roaring gap
+
+    - wxget.sh
+        bash script containing wget commands to grab new weather data
+        setup to run via CRON every 5 minutes
+
+- config.inc.php
+    php include file with database variables:
+    $_host, $_user, $_pw, $_db
+
+- daily.log
+    stdout from most recent daily processing
+
+- hourly.log
+    stdout from most recent hourly processing
+
+- incrementalProcess.php
+    php script to process recent increments of wx data
+    accepts a flag to set what interval:
+    -h to process the previous whole hour (default)
+    -d to process the previous whole day
+    -m to process the previous whole month
+    set to run automatically via cron hourly, daily, monthly
+
+- startWxDaemon.sh
+    bash script to start the inotify watcher utility
+
+- stopWxDaemon.sh
+    bash script to kill the inotify watcher utility
+
+- wget.log
+    stdout from last wget process (should be blank)
+
+- wxProcess.log
+    stdout containing all inotify processing script errors
+
+- wxProcess_c.php
+    php script to monitor for changes to all directories specified
+    in station table.
+    process files placed in this table and places data in database

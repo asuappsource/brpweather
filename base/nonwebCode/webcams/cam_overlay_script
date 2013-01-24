@@ -1,0 +1,193 @@
+#!/usr/bin/perl
+
+####################################
+# Includes
+####################################
+use strict;
+use warnings;
+use DBI;
+use POSIX ":sys_wait_h";
+
+####################################
+# Constants
+####################################
+use constant DB => 'brpweather';
+use constant USER => 'appsource';
+use constant PASSWORD => 'uberc00p';
+use constant HOST => 'localhost';
+use constant TEN_MINUTES => 10 * 60;
+use constant TWO_HOURS => 2 * 60 * 60;
+
+###################################
+# Script
+###################################
+&main();
+exit;
+
+###################################
+# - main -
+###################################
+sub main() {
+    my $dbh = &connect();
+    my $sth = &getData($dbh);
+    my $time = time;
+    while (my $row = $sth->fetchrow_hashref()) {
+        if ($time - $row->{lastModified} > TEN_MINUTES) {
+            if ($time - $row->{lastModified} > TWO_HOURS) {
+                if(!$row->{overlay}) {
+                    &createOverlay($dbh,$row);
+                }
+            } 
+        } else {
+            if ($row->{overlay}) {
+                &fixOverlay($dbh,$row);
+            }
+        }
+    }
+}
+
+###################################
+# - createOverlay
+# Creates the overlay for the image
+# and updates database
+# 
+# usage: &createOverlay($dbh,$row);
+###################################
+sub createOverlay() {
+    my $dbh = $_[0];
+    my $row = $_[1];
+    my $id = $row->{id};
+    my $name = $row->{name};
+    my $imagePath = $row->{imageDir} . "800px/image.jpeg";
+    my $imagePath1 = $row->{imageDir} . "full/image.jpeg";
+    my $imagePath2 = $row->{imageDir} . "thumb/image.jpeg";
+    my $tempImg = $imagePath . ".tmp";
+    my $tempImg1 = $imagePath1 . ".tmp";
+    my $tempImg2 = $imagePath2 . ".tmp";
+
+# 800px image
+#    if( (-e $imagePath) && (-r $imagePath) && (-w $imagePath)) {
+#	my $imgWidth = &trim(`identify -format %w $imagePath`);
+#	my $imgHeight = &trim(`identify -format %h $imagePath`);
+#	
+# modify the image
+#	my @args = ("convert $imagePath -rotate 180 -gravity center -fill '#000d' -draw \"rectangle 0,0,$imgWidth,$imgHeight\" -rotate 180 -font Courier-Bold -pointsize 36 -fill white -gravity center -draw \"text 5,2 'This is NOT a Current Image'\" $imagePath");
+#	system(@args) == 0 
+#	    or die "system @args failed: $?"
+#	    ;
+
+# now update the database
+#	my $sth = $dbh->prepare("UPDATE camera_info SET overlay = 1 WHERE id = $id");
+#	$sth->execute();
+#   } else {
+#	print "File doesn't exists or isn't readable/writable: $imagePath\n";
+#   }
+
+# full size image
+#    if( (-e $imagePath1) && (-r $imagePath1) && (-w $imagePath1)) {
+#	my $imgWidth = &trim(`identify -format %w $imagePath1`);
+#	my $imgHeight = &trim(`identify -format %h $imagePath1`);
+#
+# modify the image
+#	my @args = ("convert $imagePath1 -rotate 180 -gravity center -fill '#000d' -draw \"rectangle 0,0,$imgWidth,$imgHeight\" -rotate 180 -font Courier-Bold -pointsize 36 -fill white -gravity center -draw \"text 5,2 'This is NOT a Current Image'\" $imagePath1");
+#	system(@args) == 0 
+#	    or die "system @args failed: $?"
+#	    ;
+#
+# now update the database
+#	my $sth = $dbh->prepare("UPDATE camera_info SET overlay = 1 WHERE id = $id");
+#	$sth->execute();
+#    } else {
+#	print "File doesn't exists or isn't readable/writable: $imagePath1\n";
+#    }
+
+# thumbnail image
+    if( (-e $imagePath2) && (-r $imagePath2) && (-w $imagePath2)) {
+        my $imgWidth = &trim(`identify -format %w $imagePath2`);
+        my $imgHeight = &trim(`identify -format %h $imagePath2`);
+
+# modify the image
+        my @args = ("convert $imagePath2 -rotate 180 -gravity center -fill '#000d' -draw \"rectangle 0,0,$imgWidth,$imgHeight\" -rotate 180 -font Courier-Bold -pointsize 36 -fill white -gravity center -draw \"text 5,2 'NOT Current'\" $imagePath2");
+        system(@args) == 0 
+            or die "system @args failed: $?"
+            ;
+
+# now update the database
+        my $sth = $dbh->prepare("UPDATE camera_info SET overlay = 1 WHERE id = $id");
+        $sth->execute();
+    } else {
+        print "File doesn't exists or isn't readable/writable: $imagePath2\n";
+    }
+
+}
+
+###################################
+# - fixOverlay
+# Clears the overlay field from the database
+# 
+# usage: &fixOverlay($dbh,$row);
+###################################
+sub fixOverlay() {
+    my $dbh = $_[0];
+    my $row = $_[1];
+    my $id = $row->{id};
+    my $sth = $dbh->prepare("UPDATE camera_info SET overlay = 0 WHERE id = $id");
+    $sth->execute();
+}
+
+###################################
+# - connect -
+# Returns the database handler or dies if the connection
+# is unsuccessful
+#
+# usage:
+# my $dbh = &connect();
+###################################
+sub connect() {
+    my $dbh = DBI->connect('DBI:mysql:database='.DB.';host='.HOST, USER, PASSWORD)
+        or die "Could not connect to database: $DBI::errstr\n";
+    return $dbh;
+}
+
+####################################
+# - getData
+# Fetches all the fields used for this program
+# from the database's camera and camera_info tables.
+# Fields retrieved:
+# - id
+# - last_received_image
+# - last_received_image_timestamp
+# - overlay
+# - name
+# - usePresets
+#
+# Usage:
+# my $sth = &getMailData($dbh);
+#
+# Parameters:
+# $dbh the database handler
+#
+# Returns the statement handler from the database
+####################################
+sub getData() {
+    my $dbh = $_[0];
+    my $sth = $dbh->prepare('SELECT camera.name as name, camera_info.id as id, unix_timestamp(camera.' .
+                'lastModified) as lastModified,'.
+            ' camera_info.overlay as overlay, camera.webDir as imageDir'.
+            ' FROM camera inner join camera_info USING (id) ' .
+            ' WHERE camera.active = 1');
+    $sth->execute();
+    if ( defined( $sth->err ) ) {
+        die "Error selecting from database: $DBI::errstr\n";
+    }
+    return $sth;
+}
+
+# Perl trim function to remove whitespace from the start and end of the string
+sub trim($)
+{
+    my $string = shift;
+    $string =~ s/^\s+//;
+    $string =~ s/\s+$//;
+    return $string;
+}
