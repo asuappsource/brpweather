@@ -184,7 +184,7 @@ function parseFile($filename) {
         //$tokens = explode(' ', trim($line), 2);
         //$wxData[$tokens[0]] = $tokens[1];
         if (preg_match("/(?P<type>[a-z]+)\s(?P<value>.+)$/i", $line, $matches)) {
-            $wxData[$matches['type']] = $matches['value'];
+            $wxData[$matches['type']] = trim($matches['value']);
         }
     }
 
@@ -211,31 +211,31 @@ function insertData($station_id, $data) {
     // list of values for the query
     $_vals = '(`station_id`, `processed_time`, `reported_time`, `wind_direction`, `wind_speed`, `wind_gust`, `humidity`, `temperature`, `hi_temp`, `lo_temp`, `barometer`, `barotrend`, `rainytdraw`, `rainytd`, `evap`, `uv_index`, `solar_rad`, `wind_chill`, `heat_index`, `dew_point`, `cloud_base`)';
 
-    $qstr = "INSERT INTO raw_current_data $_vals VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $qstr = "INSERT INTO raw_current_data $_vals VALUES (:id, :ptime, :rtime, :wdir, :wspe, :wgus, :humi, :temp, :tdhi, :tdlo, :baro, :btrn, :rnyr, :rnyrr, :evap, :uvin, :srad, :wchi, :htin, :dewp, :cbas)";
     
     if ($stmt = $dbh->prepare($qstr)) {
-      $stmt->bindParam(1,$station_id);
-      $stmt->bindParam(2,$data['processed_time']);
-      $stmt->bindParam(3,$data['reported_time']);
-      $stmt->bindParam(4,$data['wdir']);
-      $stmt->bindParam(5,$data['wspe']);
-      $stmt->bindParam(6,$data['wgus']);
-      $stmt->bindParam(7,$data['humi']);
-      $stmt->bindParam(8,$data['temp']);
-      $stmt->bindParam(9,$data['tdhi']);
-      $stmt->bindParam(10,$data['tdlo']);
-      $stmt->bindParam(11,$data['baro']);
-      $stmt->bindParam(12,$data['btrn']);
-      $stmt->bindParam(13,$data['rnyr']);
-      $stmt->bindParam(14,$data['rnyr']);
-      $stmt->bindParam(15,$data['evap']);
-      $stmt->bindParam(16,$data['uvin']);
-      $stmt->bindParam(17,$data['srad']);
-      $stmt->bindParam(18,$data['wchi']);
-      $stmt->bindParam(19,$data['htin']);
-      $stmt->bindParam(20,$data['dewp']);
-      $stmt->bindParam(21,$data['cbas']);
-      
+      $stmt->bindParam(':id',$station_id);
+      $stmt->bindParam(':ptime',$data['processed_time']);
+      $stmt->bindParam(':rtime',$data['reported_time']);
+      $stmt->bindParam(':wdir',$data['wdir']);
+      $stmt->bindParam(':wspe',$data['wspe']);
+      $stmt->bindParam(':wgus',$data['wgus']);
+      $stmt->bindParam(':humi',$data['humi']);
+      $stmt->bindParam(':temp',$data['temp']);
+      $stmt->bindParam(':tdhi',$data['tdhi']);
+      $stmt->bindParam(':tdlo',$data['tdlo']);
+      $stmt->bindParam(':baro',$data['baro']);
+      $stmt->bindParam(':btrn',$data['btrn']);
+      $stmt->bindParam(':rnyr',$data['rnyr']);
+      $stmt->bindParam(':rnyrr',$data['rnyr']);
+      $stmt->bindParam(':evap',$data['evap']);
+      $stmt->bindParam(':uvin',$data['uvin']);
+      $stmt->bindParam(':srad',$data['srad']);
+      $stmt->bindParam(':wchi',$data['wchi']);
+      $stmt->bindParam(':htin',$data['htin']);
+      $stmt->bindParam(':dewp',$data['dewp']);
+      $stmt->bindParam(':cbas',$data['cbas']);
+
       $stmt->execute();
 
       // now update the time for the station in the station table
@@ -321,15 +321,16 @@ function convertCardinal($dir) {
             'NWbN',
             'NNW',
             'NbW');
-
     if (is_string($dir)) {
-        $dir = strtoupper($dir);
-        if (isset($map[$dir]))
+        $dir = trim($dir);
+        if (isset($map[$dir])) {
             return $map[$dir];
+        }
     } else if (is_int($dir) || is_double($dir)) {
         $dir = floor((($dir/11.25) + 1.5) < 33 ? (($dir/11.25) + 1.5) : (($dir/11.25) + 1.5) - 32);
-        if (isset($mapStrings[$dir-1]))
+        if (isset($mapStrings[$dir-1])) {
             return $mapStrings[$dir-1];
+        }
     }
     return -1;
 }

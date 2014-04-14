@@ -92,7 +92,7 @@ sub sendEmail() {
 	    "is not currently operational. In most cases, simply restarting the camera ".
 	    "(unplug, wait 5 seconds, and plug it back in) will resolve the problem.\n".
 	    "If the problem persists, please contact us (phone: 828-264-2030 or".
-	    " email: ray\@raysweather.com), and we'll be glad to help."
+	    " email: david\@raysweather.com), and we'll be glad to help."
 	    );
 	$sender->SendLineEnc(
 	    "Thank you,\n--BRPWebcams.org\n\n"

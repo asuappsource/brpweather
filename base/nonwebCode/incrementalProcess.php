@@ -33,13 +33,17 @@ function execute($host, $user, $pw, $db) {
     $argv = getopt('hdm');
 
     if (isset($argv['m'])) {
+        // $monthstartStr = date('Y-m-01 00:00:00');
+        // $monthendStr = date('Y-m-01 00:00:00', strtotime('next month'));
         $table = '`monthly_data`';
-        $endStr = date('Y-m-01 00:00:00');
-        $startStr = date('Y-m-01 00:00:00', strtotime('-1 month'));
+        $endStr = date('Y-m-d H:i:s');
+        $startStr = date('Y-m-01 00:00:00');
     } else if (isset($argv['d'])) {
+        // $daystartStr = date('Y-m-d 00:00:00');
+        // $dayendStr = date('Y-m-d 00:00:00', strtotime('tomorrow'));
         $table = '`daily_data`';
-        $endStr = date('Y-m-d 00:00:00');
-        $startStr = date('Y-m-d 00:00:00', time() - 86400);
+        $endStr = date('Y-m-d H:i:s');
+        $startStr = date('Y-m-d 00:00:00');
     } else {
         $table = '`hourly_data`';
         $endStr = date('Y-m-d H:00:00');
@@ -55,7 +59,7 @@ function execute($host, $user, $pw, $db) {
     processData();
 
     insertData($table);
-    
+
     mysqli_close($link);
 }
 
@@ -71,7 +75,7 @@ function getStations() {
         }
         mysqli_free_result($result);
     }
-    
+
     $resultData = $rawData;
 }    
 
@@ -97,17 +101,17 @@ function getRawData() {
 // does the math
 function processData() {
     global $rawData, $resultData, $startStr, $endStr;
-    
+
     foreach ($rawData as $id => $stationData) {
-      if(empty($stationData)) {
-	//echo "Array is empty for station $id\n";
-	$resultData[$id] = array();
-	continue;
-      }
+        if(empty($stationData)) {
+            //echo "Array is empty for station $id\n";
+            $resultData[$id] = array();
+            continue;
+        }
         //print_r($stationData);
         $resultData[$id]['date_hour_start'] = $startStr;
         $resultData[$id]['date_hour_end'] = $endStr;
-    
+
         //get first element from the station data array
         $sample0 = array_shift($stationData);
 
@@ -143,11 +147,11 @@ function processData() {
         //rain
         $r_start = $sample0['rainytdraw'];
         $r_tot = 0;
-        
+
         //wind chill
         $wc_hi = $wc_lo = $sample0['wind_chill'];
         $wc_hi_t = $wc_lo_t = $time;
-        
+
         //heat index
         $hi_hi = $hi_lo = $sample0['heat_index'];
         $hi_hi_t = $hi_lo_t = $time;
@@ -161,7 +165,7 @@ function processData() {
         array_unshift($stationData, $sample0);
         foreach ($stationData as $s_id => $sample) {
             $time = $sample['reported_time'];
-            
+
             //wind speed
             $wspd = $sample['wind_speed'];
             //TODO: in the case of ties, should it be the first or last? >= vs > / <= vs <
@@ -173,7 +177,7 @@ function processData() {
                 $w_lo = $wspd;
                 $w_lo_t = $time;
             }
-            
+
             //prevailing winds
             $wdir = $sample['wind_direction'];
             $u_tot += (-1 * $wspd) * sin($wdir);
@@ -225,11 +229,11 @@ function processData() {
                 $b_lo = $baro;
                 $b_lo_t = $time;
             }
-            
+
             //rain
             $rain = $sample['rainytdraw'] - $r_start;
             $r_tot = $rain;
-            
+
             //wind chill
             $wchi = $sample['wind_chill'];
             if ($wchi > $wc_hi) {
@@ -240,7 +244,7 @@ function processData() {
                 $wc_lo = $wchi;
                 $wc_lo_t = $time;
             }
-           
+
             //heat index
             $hind = $sample['heat_index'];
             if ($hind > $hi_hi) {
@@ -251,7 +255,7 @@ function processData() {
                 $hi_lo = $hind;
                 $hi_lo_t = $time;
             }
-            
+
             //dew point
             $dewp = $sample['dew_point'];
             if ($dewp > $dp_hi) {
@@ -262,14 +266,14 @@ function processData() {
                 $dp_lo = $dewp;
                 $dp_lo_t = $time;
             }
-            
+
             $count++;
         }
-        
+
         //calculate u and v components of predominate wind direction
         $u_avg = $u_tot / $count;
         $v_avg = $v_tot / $count;
-        
+
         //add wind data to result table
         $resultData[$id]['predom_wind_direction'] = (atan2($u_avg, $v_avg) / 0.01745329251994) + 180; // 4.0 * (atan(1.0) / 180) = 0.01745329251994
         $resultData[$id]['wind_speed_avg'] = sqrt(pow($u_avg,2) + pow($v_avg,2));
@@ -290,7 +294,7 @@ function processData() {
         $resultData[$id]['humidity_high_time'] = $h_hi_t;
         $resultData[$id]['humidity_low'] = $h_lo;
         $resultData[$id]['humidity_low_time'] = $h_lo_t;
-        
+
         //add temperature data
         $resultData[$id]['temp_avg'] = $t_tot / $count;
         $resultData[$id]['temp_high'] = $t_hi;
@@ -327,9 +331,9 @@ function processData() {
         $resultData[$id]['dew_point_low_time'] = $dp_lo_t;
 
     }
-    
-    echo "result data:\n";
-    print_r($resultData);
+
+    //echo "result data:\n";
+    //print_r($resultData);
 
 }
 
@@ -338,10 +342,10 @@ function insertData($table) {
     global $link, $resultData;
 
     foreach ($resultData as $id => $result) {
-      if(empty($result)) {
-	//echo "Empty array for station $id\n";
-	continue;
-      }
+        if(empty($result)) {
+            //echo "Empty array for station $id\n";
+            continue;
+        }
         $values = '\''.$id.'\', \''.implode('\', \'', $result).'\'';
         $query = "REPLACE INTO $table VALUES ($values)";
 
@@ -350,6 +354,6 @@ function insertData($table) {
     }
 
 }
-    
+
 
 ?>
