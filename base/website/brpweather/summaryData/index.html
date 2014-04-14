@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>Get Summary Weather Data</title>
+    </head>
+    <body>
+        <h1>Select how to summarize weather data</h1>
+        <form action='summaryData.php' method='GET'>
+            <p>How do you want the data summarized?</p>
+            <p><select name='interval'>
+                <option value='hourly'>Hourly</option>
+                <option value='daily'>Daily</option>
+                <option value='monthly'>Monthly</option>
+            </select></p>
+            <p>*Need to select station //TODO*</p>
+            <p>Select the time interval for which you want data</p>
+            <p>Data From: <input type='text' name='start' /></p>
+            <p>To: <input type='text' name='end' /></p>
+            <p><input type='submit' value='Submit' /></p>
+        </form>
+    </body>
+
+</html>

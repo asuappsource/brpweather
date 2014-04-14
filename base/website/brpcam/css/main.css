@@ -1,0 +1,145 @@
+html, body {
+    height: 100%;
+}
+
+body {
+    background: #415d81 url('../img/bgb.png') no-repeat center center;
+}
+
+#heading {
+    margin: 28px 0 0 0;
+    color: #c24704;
+    font-size: 3.5em;
+}
+
+.masthead .well {
+    margin-bottom: 0;
+}
+
+.masthead .well a:last-child {
+    margin-left:10px;
+}
+
+.container-narrow {
+    margin: 0 auto;
+    max-width: 800px;
+    padding: 20px;
+    background: #fafafa;
+    border-bottom-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+}
+.container-narrow > hr {
+    margin: 16px 0;
+}
+
+a:hover {
+    text-decoration: none;
+}
+
+.row-fluid.webcams {
+    margin: 16px inherit;
+}
+
+.separatorHR {
+    height: 5px;
+    background-color: rgb(231, 231, 231);
+    color: rgb(231, 231, 231);
+}
+
+.cam-thumb:hover img {
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
+}
+
+#cam-info {
+    margin-bottom: 10px;
+}
+
+#cam-info #title {
+    margin: 0;
+    line-height: 1;
+    color: #d9cc3c;
+}
+
+#camera-select{
+    height: 24px;
+    max-width: 192px;
+    font-size: 80%;
+}
+
+#dynamic-map {
+    width: 290px;
+    height: 180px;
+}
+
+#buffer-frame {
+    position: relative;
+}
+
+img.webcam-anim, img.webcam-anim-buffer .row-fluid.webcams {
+    max-width: 758px;
+}
+
+img.webcam-anim-buffer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+
+#anim-controls {
+    margin: 8px 0;
+}
+
+#pause {
+    margin-left: 0;
+}
+
+label[for='time'] {
+    margin-left: 20px;
+}
+
+#frame-counter, #cam-info, #frame-timestamp {
+    font-size: 85%;
+    color: #777;
+}
+
+#frame-counter {
+    text-align: right;
+}
+
+#preload-progress {
+    min-height: 20px;
+    margin: 3px 0 0 0;
+}
+
+/* custom modal styling */
+
+#lightbox {
+    top: 50%;
+    left: 50%;
+    margin: -300px 0 0 -400px;
+    width: 800px;
+    border-radius: 0;
+    border: none;
+}
+
+#lightbox .modal-body {
+    padding: 0;
+    max-height: inherit;
+}
+
+#lightbox .close {
+    position: absolute;
+    top: 4px;
+    right: 8px;
+}
+
+/*
+ * colors
+ * kuler link: https://kuler.adobe.com/#themeID/1974489
+ * orange:  #c24704
+ * olive:   #d9cc3c
+ * beige:   #ffeb79
+ * teal:    #a0e0a9
+ * blue:    #00ada7
+ */
