@@ -1,0 +1,220 @@
+#!/usr/bin/perl
+
+####################################
+# Includes
+####################################
+use strict;
+use warnings;
+use DBI;
+use POSIX ":sys_wait_h";
+use Mail::Sender;
+
+####################################
+# Constants
+####################################
+use constant DB => 'brpweather'; #raysweather
+use constant USER => 'appsource';
+use constant PASSWORD => 'uberc00p';
+use constant HOST => 'localhost'; # beta
+use constant SMTP_SERVER => 'localhost';
+use constant FROM_EMAIL => 'weather_cam_noreply@brpwebcams.org';
+use constant TEN_MINUTES => 10 * 60;
+use constant TWO_HOURS => 2 * 60 * 60;
+use constant FOUR_HOURS => 4 * 60 * 60;
+
+###################################
+# Script
+###################################
+&main();
+exec('./cam_overlay_script');
+exit;
+
+###################################
+# - main -
+###################################
+sub main() {
+    my $dbh = &connect();
+    my $sth = &getMailData($dbh);
+    my $time = time;
+    while (my $row = $sth->fetchrow_hashref()) {
+	if ($time - $row->{last_received_image_timestamp} > TEN_MINUTES) {
+	    if (! defined ($row->{last_email_sent}) && 
+		($time - $row->{last_received_image_timestamp}) > TWO_HOURS) {
+		&sendEmail($dbh,$row);
+	    } elsif (defined($row->{last_email_sent}) &&
+		     ($time - $row->{last_email_sent}) > FOUR_HOURS) {
+		&sendEmail($dbh,$row);
+	    }
+	} else {
+	    if (defined ($row->{last_email_sent} ) ) {
+		&sendFixedEmail($dbh,$row);
+	    }
+	}
+    }
+}
+###################################
+# - sendEmail -
+# Sends an email to the person in charge of the camera
+# telling them that their camera is f'd up
+#
+# usage:
+# &sendEmail($dbh,$row);
+#
+# Parameters:
+# $dbh - the database handler
+# $row - the row from the select, with the email and last recieved image time
+###################################
+sub sendEmail() {
+    my $dbh = $_[0];
+    my $row = $_[1];
+    if (! defined ($row->{site_email_notification})) {
+	print 'Cannot notify site with no email!' .
+	    "\nCamera $row->{name} failed!\n";
+	return;
+    }
+    eval {
+	my $sender = new Mail::Sender {
+	    smtp => SMTP_SERVER,
+	    from => FROM_EMAIL,
+	    on_errors => 'die',
+	};
+	$sender->Open({
+	    to => $row->{site_email_notification},
+	    cc => '',
+	    subject => 'Weather Cam Failure'
+		      });
+	$sender->SendLineEnc(
+	    "Weather Cam Administrator,\n"
+	    );
+	$sender->SendLineEnc(
+	    "BRPWebcams.org has not received an image from your webcam, $row->{name},".
+	    " since $row->{last_received_image}. Please help us investigate why the camera ".
+	    "is not currently operational. In most cases, simply restarting the camera ".
+	    "(unplug, wait 5 seconds, and plug it back in) will resolve the problem.\n".
+	    "If the problem persists, please contact us (phone: 828-264-2030 or".
+	    " email: david\@raysweather.com), and we'll be glad to help."
+	    );
+	$sender->SendLineEnc(
+	    "Thank you,\n--BRPWebcams.org\n\n"
+	    );
+	$sender->SendLineEnc(
+	    "This is an automated message sent by the Web Cam System at BRPWebcams.org and will be".
+	    " resent every four hours until the camera is operational again.  You will".
+	    " also receive a notification email when the camera begins working again.\n"
+	    );
+	$sender->Close();
+	my $rows = $dbh->do('UPDATE camera_info SET last_email_sent=CURRENT_TIMESTAMP WHERE id=?',
+			    undef, $row->{id});
+	if ($rows != 1 || defined($dbh->err)) {
+	    print "Error updating database: $DBI::errstr\n";
+	}
+    };
+    if ($@) {
+	print "Failed to send message: $@\n";
+    }
+}
+
+#######################################################
+# - sendFixedEmail -
+# Emails the contact person to inform them that the camera
+# is now fixed and working correctly.
+#
+# Usage:
+# &sendFixedEmail($dbh,$row);
+#
+# Parameters:
+# $dbh - the database handler
+# $row - the row from the select statement containing the
+#           contact email and other information
+#######################################################
+sub sendFixedEmail() {
+    my $dbh = $_[0];
+    my $row = $_[1];
+    if (! defined ($row->{site_email_notification})) {
+	print 'Cannot notify site with no email!' .
+	    "\nCamera $row->{name} fixed!\n";
+	return;
+    }
+    eval {
+	my $sender = new Mail::Sender {
+	    smtp => SMTP_SERVER,
+	    from => FROM_EMAIL,
+	    on_errors => 'die',
+	};
+	$sender->Open({
+	    to => $row->{site_email_notification},
+	    cc => '',
+	    subject => 'Weather Cam Fixed'
+		      });
+	$sender->SendLineEnc(
+	    "Weather Cam Administrator,\n"
+	    );
+	$sender->SendLineEnc(
+	    "BRPWebcams.org just received an image from your webcam, $row->{name}.".
+	    "  This means that the camera is now working correctly.\n"
+	    );
+	$sender->SendLineEnc(
+	    "Thank you,\n--BRPWebcams.org\n\n"
+	    );
+	$sender->SendLineEnc(
+	    "This is an automated message sent by the BRPWebcams.org webcam system.\n"
+	    );
+	$sender->Close();
+	my $rows = $dbh->do('UPDATE camera_info SET last_email_sent=NULL WHERE id=?',
+			    undef, $row->{id});
+	if ($rows != 1 || defined($dbh->err)) {
+	    print "Error updating database: $DBI::errstr\n";
+	}
+    };
+    if ($@) {
+	print "Failed to send message: $@\n";
+    }
+}
+
+###################################
+# - connect -
+# Returns the database handler or dies if the connection
+# is unsuccessful
+#
+# usage:
+# my $dbh = &connect();
+##################################
+sub connect() {
+    my $dbh = DBI->connect('DBI:mysql:database='.DB.';host='.HOST, USER, PASSWORD)
+	or die "Could not connect to database: $DBI::errstr\n";
+    return $dbh;
+}
+
+####################################
+# - getMailData
+# Fetches all the fields used for this program
+# from the database's camera and camera_info tables.
+# Fields retrieved:
+# - id
+# - last_received_image
+# - last_received_image_timestamp
+# - site_email_notification
+# - last_email_sent
+# - name
+#
+# Usage:
+# my $sth = &getMailData($dbh);
+#
+# Parameters:
+# $dbh the database handler
+#
+# Returns the statement handler from the database
+####################################
+sub getMailData() {
+    my $dbh = $_[0];
+    my $sth = $dbh->prepare('SELECT camera.name as name, camera_info.id as id, unix_timestamp(camera.' .
+			    'lastModified) as last_received_image_timestamp, camera.lastModified'.
+			    ' as last_received_image, camera_info.site_email_notification as site_email_notification,'.
+			    ' unix_timestamp(camera_info.last_email_sent) as last_email_sent FROM camera inner join camera_info USING (id) ' .
+			    ' WHERE camera.active = 1');
+    $sth->execute();
+    if ( defined( $sth->err ) ) {
+	die "Error selecting from database: $DBI::errstr\n";
+    }
+    return $sth;
+}

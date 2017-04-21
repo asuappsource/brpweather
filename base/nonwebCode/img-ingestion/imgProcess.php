@@ -13,6 +13,11 @@ $signal = 1; // stop signal
 $cameras; // array of camera data
 $watchMap = array(); // array of inotify watch descriptors
 
+// Write the process ID to a file, so systemd can kill this process later
+$myPid = getmypid();
+$pidFile = fopen('/home/brpweather/img-ingestion/webcamProcess.pid', 'w+');
+fwrite($pidFile, $myPid);
+
 // set up signal handling
 pcntl_signal(SIGUSR1, "sig_handler");
 
@@ -21,9 +26,10 @@ echo "===================================\n";
 echo date(DATE_RFC822) . "\n\n";
 
 // run, go, do
-execute($_host, $_user, $_pw, $_db);
+//execute($_host, $_user, $_pw, $_db);
+execute();
 
-function execute($host, $user, $pw, $db) {
+function execute() {
     global $cameras, $watchMap, $dbh, $inotify;
     
     // connect to the database
@@ -112,7 +118,8 @@ function initInotifyWatches() {
                     
                     // add the watch to our inotify instance.
                     // the IN_CLOSE_WRITE mask seems the most pertinent.
-                    $watch = inotify_add_watch($inotify, $d, IN_CLOSE_WRITE);
+                    //$watch = inotify_add_watch($inotify, $d, IN_CLOSE_WRITE);
+                    $watch = inotify_add_watch($inotify, $d, IN_MOVED_TO);
         
                     if ($watch === false) {
                         fprintf(STDERR, "Failed to watch directory '%s'\n", $d);
@@ -120,7 +127,7 @@ function initInotifyWatches() {
                         $camera['watch'] = $watch;
                         $watchMap[$watch]['dir'] = $d;
                         $watchMap[$watch]['webDir'] = $camera['webDir'];
-			$watchMap[$watch]['id'] = $id;
+			            $watchMap[$watch]['id'] = $id;
                     }
                     fclose($fd);
                 }
@@ -163,7 +170,10 @@ function handleEvent($event) {
 
     // make sure the subdirectories exist and are writable
     // NOTE: this is not efficient at all, consider relocating this code
+    $webDir = '/var/www/html/brpcam/' . $webDir;
+
     if(!is_dir($webDir . "full/")) {
+        //echo "Attempting to mkdir in $webDir" . "full/\n";
       mkdir($webDir . "full/", 0755,true);
     }
     if(!is_dir($webDir . "800px/")) {

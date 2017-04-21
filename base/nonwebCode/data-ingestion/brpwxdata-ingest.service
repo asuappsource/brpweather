@@ -1,0 +1,30 @@
+# Systemd service definition for BRP wxdata ingestion process
+# This file belongs in /etc/systemd/system/brpwxdata-ingest.service
+#
+# Commands:
+# Enable the service on boot: systemctl enable brpwxdata-ingest
+# Start the service: systemctl start brpwxdata-ingest
+# Check status: systemctl status brpwxdata-ingest
+# Stop the service: systemctl stop brpwxdata-ingest
+
+[Unit]
+Description=BRP Weather Data Ingestion
+After=syslog.target
+After=network.target
+
+[Service]
+Type=simple
+User=brpweather
+Group=brpweather
+#PIDFile=/var/run/mysqld/mysqld.pid
+
+ExecStart=/home/brpweather/data-ingestion/startWxDaemon.sh
+ExecStop=/home/brpweather/data-ingestion/stopWxDaemon.sh
+
+# Give a reasonable amount of time for the server to start up/shut down
+TimeoutSec=30
+
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
