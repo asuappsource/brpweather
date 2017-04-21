@@ -23,7 +23,8 @@ $(function() {
     showAnimation(_id, $("#time").val());
     
     // grab the meta-data for this webcam
-    $.getJSON("/brpweather/apis/webcams?json").done(function(json) {
+    //$.getJSON("/brpweather/apis/webcams?json").done(function(json) {
+    $.getJSON("http://wxdata.appsourceweather.org/webcam.php?json").done(function(json) {
         $("#initial-loading").hide();
         
         var webcamSelect = $("#camera-select");
@@ -65,7 +66,8 @@ $(function() {
         camInfo.find("#state").text(_webcam.state);
         camInfo.find("#mile-marker").text(_webcam.milemarker);
     
-        fullImageURL = "http://brpweather.org/webcams/" + _webcam.dir + "/800px/image.jpeg";
+        //fullImageURL = "http://brpweather.org/webcams/" + _webcam.dir + "/800px/image.jpeg";
+        fullImageURL = "http://brpwebcams.org/images/" + _webcam.dir + "/800px/image.jpeg";
         animImage.attr('src', fullImageURL);
         $("#webcam-full").attr('src', fullImageURL);
     
@@ -160,7 +162,7 @@ $(function() {
     });
 
     function showAnimation(id, seconds) {
-        $.getJSON("/brpweather/imageArr.php?id=" + id + "&range=" + seconds).done(function(json) {
+        $.getJSON("//wxdata.appsourceweather.org/imageArr.php?id=" + id + "&range=" + seconds).done(function(json) {
             preloadControls.show();
             animImage.attr('src', fullImageURL);;
             
