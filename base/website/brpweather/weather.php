@@ -2,7 +2,6 @@
 
 require_once("dbconnect.php.inc");
 require_once("functions.php");
-
 global $xml;
 
 if (isset($_GET['date'])  && ($t = strtotime($_GET['date']))) {
@@ -34,8 +33,8 @@ if (isset($_GET['station'])) {
     $xml->startDocument('1.0', 'UTF-8');
     $xml->startElement('weather');
     $xml->writeElement('stations', $_GET['station']);
-} else die();
-    
+} else die('No station specified.');
+
 $xml->writeElement('start', $starttime);
 $xml->writeElement('end', $endtime);
 
