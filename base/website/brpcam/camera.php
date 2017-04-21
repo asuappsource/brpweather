@@ -25,11 +25,15 @@
     <div class="container-narrow">
 
       <div class="masthead row-fluid">
+        <div class="span8">
           <a href="index.php"><h2 class="span8" id="heading">BRP Webcams</h2></a>
-          <div class="well well-small pull-right">
-            <a href="http://nps.gov/blri" target="_blank"><img src="/img/blri_logo.png" /></a>
-            <a href="http://brpfoundation.org" target="_blank"><img src="/img/blpf_logo.png" /></a>
+        </div>
+        <div class="span4">
+          <div class="well well-small">
+            <a href="http://nps.gov/blri" target="_blank"><img style="max-width:100px;" src="/img/blri_logo.gif" /></a>
+            <a href="http://brpfoundation.org" target="_blank"><img style="max-width:100px;" src="/img/blpf_logo.svg" /></a>
           </div>
+        </div>
       </div>
 
       <hr>
@@ -127,7 +131,7 @@
       <hr>
 
       <div class="footer">
-        <p>&copy; Appsource 2013</p>
+        <p>&copy; Appsource 2017</p>
       </div>
 
     </div> <!-- /container -->
@@ -144,7 +148,7 @@
         var _id = <?php echo (isset($_GET['webcam']) && is_numeric($_GET['webcam'])) ? $_GET['webcam'] : 3; ?>;
         var _lapse = <?php echo (isset($_GET['hours']) && is_numeric($_GET['hours'])) ? $_GET['hours'] : 1; ?>;
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdPupGvZme3V9RsCbHRa-nq7NyvkqLcc0&sensor=false"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdPupGvZme3V9RsCbHRa-nq7NyvkqLcc0"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
     <script src="/js/bootstrap.min.js"></script>
     <script src="/js/jquery.imagesloaded.min.js"></script>
