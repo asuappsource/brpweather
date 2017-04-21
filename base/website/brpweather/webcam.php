@@ -4,7 +4,7 @@ require_once("dbconnect.php.inc");
 require_once("functions.php");
 
 global $xml;
-$_colList = '`camera`.`id`, `webDir`, `name`, `active`, `lastModified`, `city`, `state`, `lat`, `long`, `milemarker`';
+$_colList = '`camera`.`id`, `webDir`, `name`, `active`, `lastModified`, `city`, `state`, `lat`, `longitude`, `milemarker`';
 
 if (isset($_GET['json'])) {
     header('content-type: application/json');
@@ -40,8 +40,10 @@ while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
 
         $row['webcamURL'] = 'http://brpwebcams.org/cam/'.$row['id'];
         $web_path = str_replace('/var/www', '', $row['webDir']);
-        $row['thumbURL'] = 'http://appsourcevideo.cs.appstate.edu'.$web_path.'thumb/image.jpeg';
-        $row['dir'] = end(explode('/', trim($web_path, '/')));
+        $row['thumbURL'] = 'http://brpwebcams.org/'.$web_path.'thumb/image.jpeg';
+        //$row['dir'] = end(explode('/', trim($web_path, '/')));
+        $pathParts = explode('/', trim($web_path, '/'));
+        $row['dir'] = end($pathParts);
         unset($row['webDir']);
         unset($row['active']);
         
