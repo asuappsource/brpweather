@@ -20,7 +20,7 @@ if((isset($_POST['range']) || isset($_GET['range'])) && (isset($_POST['id']) || 
     $dir = "";
     // fetch the results
     if($row = $sth->fetch(PDO::FETCH_BOTH)) {
-        $dir = $row['webDir'];
+        $dir = '../brpcam/' . $row['webDir'];
     }
 
     // close the connection to the database
