@@ -25,11 +25,15 @@
     <div class="container-narrow">
 
       <div class="masthead row-fluid">
-          <h2 id="heading" class="span6">BRP Webcams</h2>
-          <div class="well well-small pull-right">
-            <a href="http://nps.gov/blri" target="_blank"><img src="/img/blri_logo.png" /></a>
-            <a href="http://brpfoundation.org" target="_blank"><img src="/img/blpf_logo.png" /></a>
+        <div class="span8">
+          <h2 id="heading" class="">Blue Ridge Parkway Webcams</h2>
+        </div>
+        <div class="span4">
+          <div class="well well-small">
+            <a href="http://nps.gov/blri" target="_blank"><img style="max-width:100px;" src="/img/blri_logo.gif" /></a>
+            <a href="http://brpfoundation.org" target="_blank"><img style="max-width:100px;" src="/img/blpf_logo.svg" /></a>
           </div>
+        </div>
       </div>
 
       <hr>
@@ -42,7 +46,7 @@
       </div>
 
       <div class="footer">
-        <p>&copy; Appsource 2013</p>
+        <p>&copy; Appsource 2017</p>
       </div>
 
     </div> <!-- /container -->
@@ -52,7 +56,8 @@
         var webcams = {};
         $(function() {
 
-            $.getJSON("brpweather/apis/webcams?json").done(function(json) {
+            //$.getJSON("brpweather/apis/webcams?json").done(function(json) {
+            $.getJSON("http://wxdata.appsourceweather.org/webcam.php?json").done(function(json) {
                 var webcamsWrapper = $("#webcams-wrapper");
 
                 var rowElement;
