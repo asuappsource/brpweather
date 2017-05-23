@@ -61,7 +61,7 @@ $(function() {
         frameTimeStamp.text(lastModified.toLocaleDateString() + " at " + lastModified.toLocaleTimeString() + DSTsuffix);
         
         camInfo.find("#title").text(_webcam.name);
-        camInfo.find("#description").text(_webcam.caption);
+        //camInfo.find("#description").text(_webcam.caption);
         camInfo.find("#city").text(_webcam.city);
         camInfo.find("#state").text(_webcam.state);
         camInfo.find("#mile-marker").text(_webcam.milemarker);
@@ -73,11 +73,13 @@ $(function() {
     
         //var staticMapURL ="http://maps.googleapis.com/maps/api/staticmap?size=290x180&zoom=9&markers=icon:http://appsourcevideo.cs.appstate.edu/brpcam/img/cam_map_pin.png%7C" + _webcam.lat  + "," + _webcam.long + "&sensor=false";
         //$("img#static-map").attr('src', staticMapURL);
-        initGMap(_webcam.lat, _webcam.long);
+        
+        //initGMap(_webcam.lat, _webcam.long);
     
         $("#ajax-loaded").show();
     });
 
+    /*
     function initGMap(lat, lng) {
         var pos = new google.maps.LatLng(lat, lng);
         var opts = {
@@ -105,8 +107,10 @@ $(function() {
             url: "http://brpwebcams.org/kml/MotorROAD.kmz"
         });
     }
+    */
     // register preload cancel button handler
     $("#cancel").click(function() {
+
         if ($(".preload-temp").remove().length > 0) {
             if (_interval != null) pause();
             restoreState();
@@ -164,11 +168,11 @@ $(function() {
     function showAnimation(id, seconds) {
         $.getJSON("//wxdata.appsourceweather.org/imageArr.php?id=" + id + "&range=" + seconds).done(function(json) {
             preloadControls.show();
-            animImage.attr('src', fullImageURL);;
-            
+            animImage.attr('src', fullImageURL);
+
             // urls come in with /var/www at the beginning, need to trim that off
             for (var i=0; i<json.length; i++) {
-                json[i] = json[i].split("/var/www")[1];
+                json[i] = json[i].split("../brpcam")[1];
             }
 
             frames = {
